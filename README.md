@@ -136,13 +136,13 @@ To check the training logs and the built models above, you can launches a tracki
 
 When accessing `http://127.0.0.1:5000` in your browser, you can see a MLflow web UI below:
 
-<img src="mlflow_ui.png" width="750px">
+<img src="resources/mlflow_ui.png" width="750px">
 
 As you see, the run with `max_depth`=12, `learning_rate`=0.1, and `subsample`=0.8 is the best in the top.
 In a detaild page for the run, you can find the corresponding model located in
 `/Users/maropu/Desktop/mlflow-blog-sample-201905/mlruns/0/7d1c4faeeaaa4179a6088c2f456dfe77/artifacts/model` below.
 
-<img src="mlflow_artifacts.png" width="750px">
+<img src="resources/mlflow_artifacts.png" width="750px">
 
 By using a `mlflow pyfunc serve` command, you can launch a stand-alone REST server and deploy the model in it.
 Besides this, you can also deploy into other ML inference services
