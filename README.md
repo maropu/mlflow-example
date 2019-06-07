@@ -1,10 +1,10 @@
 ## What's MLflow?
 
-[MLflow](https://www.mlflow.org/) provides some functionality to improve ML model **tracking**,
+[MLflow](https://www.mlflow.org/) provides some functionalities to improve ML model **trackability**,
 **reproduciblity**, **reusability**, and also **deployability**.
-For **tracking**, it provides a logging framework and a simple Web UI to manage training logs
+For **trackability** and **reproduciblity**, it provides a logging framework and a simple Web UI to manage training logs
 (e.g., datasets, features, and hyperparameters) about built ML models ([MLflow Tracking](https://www.mlflow.org/docs/latest/tracking.html)).
-For **reusability** and **reproduciblity**, it automatically resolves dependencies requird by [a training script](./train.py)
+For **reusability**, it automatically resolves dependencies requird by [a training script](./train.py)
 before learning models ([MLflow Projects](https://www.mlflow.org/docs/latest/projects.html)); it uses `conda` or `docker` to do so
 (`conda` used in this example and all the dependencies listed in [conda.yaml](./conda.yaml)).
 For **deployability**, it implements a simple command to deploy saved models in the MLflow logging framework
