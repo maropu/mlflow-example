@@ -8,5 +8,5 @@ entry_points:
       max_depth: {type: string, default: '3'}
       learning_rate: {type: string, default: '0.1'}
       subsample: {type: string, default: '1.0'}
-    command: 'spark-submit --master local[*] train.py --max_depth={max_depth} --learning_rate={learning_rate} --subsample={subsample}'
+    command: 'spark-submit --master local[*] train.py --max_depth={max_depth} --show_dtreeviz'
 

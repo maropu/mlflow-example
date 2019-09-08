@@ -10,6 +10,7 @@ import numpy as np
 import xgboost as xgb
 from argparse import ArgumentParser
 from pyspark.sql import SparkSession
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 from urllib.request import urlretrieve
@@ -35,9 +36,8 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument('--experiment_name', dest='experiment_name', help='Expriment Name', type=str, required=False, default='Default')
     parser.add_argument('--run_name', dest='run_name', help='Run Name', type=str, required=False, default='N/A')
-    parser.add_argument('--max_depth', dest='max_depth', help='XGBoost Max Depth', type=str, required=True)
-    parser.add_argument('--learning_rate', dest='learning_rate', help='XGBoost Learning Rate', type=str, required=True)
-    parser.add_argument('--subsample', dest='subsample', help='XGBoost Subsampling Ratio', type=str, required=True)
+    parser.add_argument('--max_depth', dest='max_depth', help='scikit-learn DecisionTreeClassifier Max Depth', type=str, required=True)
+    parser.add_argument('--show_dtreeviz', dest='show_dtreeviz', action='store_true')
     args = parser.parse_args()
 
     # Checks if the dataset exists
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     spark.read.option('header', True).option('inferSchema', True).csv(base_path + 'R2_stores.csv').createOrReplaceTempView('R2_stores')
     sdf = spark.sql(
         "SELECT " \
-            "CAST(TRIM(BOTH '\\'' FROM weekly_sales) AS INT) weekly_sales, " \
+            "(CAST(TRIM(BOTH '\\'' FROM weekly_sales) AS INT) - 1) weekly_sales, " \
             "CAST(TRIM(BOTH '\\'' FROM sid) AS INT) sid, " \
             "CAST(TRIM(BOTH '\\'' FROM dept) AS INT) dept, " \
             "CAST(TRIM(BOTH '\\'' FROM s.store) AS INT) store, " \
@@ -94,29 +94,37 @@ if __name__ == "__main__":
     y = df['weekly_sales']
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75)
 
-    # Starts runs with different XGBoost parameters
+    # Starts runs with different DecisionTreeClassifier parameters
     for md in args.max_depth.split(','):
-        for lr in args.learning_rate.split(','):
-            for ssr in args.subsample.split(','):
-                # Creates an execution context for a single run with given parameters (`md`, `lr`, and `ssr`)
-                with mlflow.start_run(run_name=args.run_name) as run:
-                    clf = xgb.XGBClassifier(max_depth=int(md), learning_rate=float(lr), nthread=-1, subsample=float(ssr))
-                    clf.fit(X_train, y_train)
+        # Creates an execution context for a single run with given parameters `md`
+        with mlflow.start_run(run_name=args.run_name) as run:
+            clf = DecisionTreeClassifier(max_depth=int(md))
+            clf.fit(X_train, y_train)
 
-                    # Computes a metric for the built model
-                    pred = clf.predict(X_test)
-                    rmse = np.sqrt(mean_squared_error(y_test, pred))
+            if args.show_dtreeviz:
+                from dtreeviz.trees import dtreeviz
+                viz = dtreeviz(
+                    clf,
+                    X_train,
+                    y_train,
+                    target_name='weekly_sales',
+                    feature_names=X.columns,
+                    class_names=['1', '2', '3', '4', '5', '6', '7'])
 
-                    # For better tracking, stores the training logs (the three parameters and the metric)
-                    # and the built model in the MLflow logging framework
-                    # TODO: Saves a graphviz image for feature importances in XGBoost
-                    mlflow.set_tag('training algorithm', 'xgboost')
-                    mlflow.log_param('max_depth', md)
-                    mlflow.log_param('learning_rate', lr)
-                    mlflow.log_param('subsample', ssr)
-                    mlflow.log_metric('RMSE', rmse)
-                    mlflow.sklearn.log_model(clf, 'model')
+                viz.view()
 
-                    print('XGBoost model (max_depth=%s, learning_rate=%s, subsample=%s):' % (md, lr, ssr))
-                    print('  RMSE: %f' % rmse)
+            # Computes a metric for the built model
+            pred = clf.predict(X_test)
+            rmse = np.sqrt(mean_squared_error(y_test, pred))
+
+            # For better tracking, stores the training logs (the three parameters and the metric)
+            # and the built model in the MLflow logging framework
+            # TODO: Saves a graphviz image for feature importances in DecisionTreeClassifier
+            mlflow.set_tag('training algorithm', 'xgboost')
+            mlflow.log_param('max_depth', md)
+            mlflow.log_metric('RMSE', rmse)
+            mlflow.sklearn.log_model(clf, 'model')
+
+            print('DecisionTreeClassifier model (max_depth=%s, learning_rate=%s, subsample=%s):' % (md, lr, ssr))
+            print('  RMSE: %f' % rmse)
 
