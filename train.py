@@ -15,7 +15,7 @@ from sklearn.model_selection import train_test_split
 from urllib.request import urlretrieve
 
 import mlflow
-import mlflow.sklearn
+import mlflow.xgboost
 
 print('MLflow version:%s' % mlflow.version.VERSION)
 print('Tracking URI:%s' % mlflow.tracking.get_tracking_uri())
@@ -94,6 +94,9 @@ if __name__ == "__main__":
     y = df['weekly_sales']
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.75)
 
+    # Enables automatic logging for XGBoost
+    mlflow.xgboost.autolog()
+
     # Starts runs with different XGBoost parameters
     for md in args.max_depth.split(','):
         for lr in args.learning_rate.split(','):
@@ -107,15 +110,12 @@ if __name__ == "__main__":
                     pred = clf.predict(X_test)
                     rmse = np.sqrt(mean_squared_error(y_test, pred))
 
-                    # For better tracking, stores the training logs (the three parameters and the metric)
-                    # and the built model in the MLflow logging framework
+                    # For better tracking, stores the training logs and the built model
+                    # in the MLflow logging framework
                     # TODO: Saves a graphviz image for feature importances in XGBoost
                     mlflow.set_tag('training algorithm', 'xgboost')
-                    mlflow.log_param('max_depth', md)
-                    mlflow.log_param('learning_rate', lr)
-                    mlflow.log_param('subsample', ssr)
-                    mlflow.log_metric('RMSE', rmse)
-                    mlflow.sklearn.log_model(clf, 'model')
+                    mlflow.log_metrics({'RMSE': rmse})
+                    mlflow.xgboost.log_model(clf, 'model')
 
                     print('XGBoost model (max_depth=%s, learning_rate=%s, subsample=%s):' % (md, lr, ssr))
                     print('  RMSE: %f' % rmse)
