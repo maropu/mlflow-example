@@ -9,8 +9,10 @@ dependencies:
   - pip=19.0.3=py37_0
   - urllib3=1.24.1=py37_0
   - openblas=0.3.3=hdc02c5d_1001
-  - mlflow=1.11.0=py37hc8dfbb8_1
   - pandas=0.24.2=py37h86efe34_0
   - pyspark=2.4.3=py_0
   - xgboost=0.82=py37h6de7cb9_0
+  - pip:
+      # - shap==0.37.0
+      - mlflow==1.12.0
 

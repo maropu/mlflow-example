@@ -7,6 +7,7 @@ import sys
 import zipfile
 
 import numpy as np
+# import shap
 import xgboost as xgb
 from argparse import ArgumentParser
 from pyspark.sql import SparkSession
@@ -113,6 +114,12 @@ if __name__ == "__main__":
                     # For better tracking, stores the training logs and the built model
                     # in the MLflow logging framework
                     # TODO: Saves a graphviz image for feature importances in XGBoost
+                    from mlflow.models.signature import infer_signature
+                    infer_signature(X_train, y_test)
+
+                    # This feature implemented in MLflow v1.12.0
+                    # mlflow.shap.log_explanation(clf, X_train)
+
                     mlflow.set_tag('training algorithm', 'xgboost')
                     mlflow.log_metrics({'RMSE': rmse})
                     mlflow.xgboost.log_model(clf, 'model')
